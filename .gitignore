@@ -1,0 +1,6 @@
+.vs/*
+*.vs
+KnifeFix/bin/*
+KnifeFix/lib/*
+KnifeFix/obj/*
+/KnifeFix/GameFolder.props
