@@ -2,6 +2,7 @@
 using GameData;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using System;
+using Il2CppSystem.Collections.Generic;
 
 namespace KnifeFix
 {
@@ -10,6 +11,8 @@ namespace KnifeFix
         private const float KNIFE_SPHERE_MIN = .15f;
         private const float KNIFE_SPHERE_MOD = -.15f;
         private const float KNIFE_LENGTH_MOD = .25f;
+
+        private static List<uint> modifiedAnims = new();
 
         [HarmonyPatch(typeof(GameDataInit), nameof(GameDataInit.Initialize))]
         [HarmonyWrapSafe]
@@ -24,31 +27,43 @@ namespace KnifeFix
                     continue;
 
                 if (IsKnifeAnim(animBlock))
-                    OverwriteKnifeAnim(archBlock, animBlock);
+                {
+                    Loader.Logger.LogMessage("Modified " + archBlock.PublicName + " archetype block.");
+                    OverwriteKnifeArch(archBlock);
+                    if (!modifiedAnims.Contains(animBlock.persistentID))
+                    {
+                        Loader.Logger.LogMessage("Modified " + animBlock.name + " animation block.");
+                        OverwriteKnifeAnim(animBlock);
+                        modifiedAnims.Add(animBlock.persistentID);
+                    }
+                }
             }
         }
 
         private static bool IsKnifeAnim(MeleeAnimationSetDataBlock animBlock)
         {
+            if (modifiedAnims.Contains(animBlock.persistentID))
+                return true;
+
             // Since custom rundowns can rename knife or have custom animations of their own,
             // this seemed like the safest way to reduce false positives (albeit, it's not pretty).
 
             if (!animBlock.FPAttackMissRight.Anim.Name.Equals("Knife_Hit"))
                 return false;
 
-            if (animBlock.FPAttackMissRight.AttackHitFrameTime < 10)
+            if (animBlock.FPAttackMissRight.AttackHitFrameTime < 5)
                 return false;
 
             if (!animBlock.FPAttackMissLeft.Anim.Name.Equals("Knife_Hit2"))
                 return false;
 
-            if (animBlock.FPAttackMissLeft.AttackHitFrameTime < 10)
+            if (animBlock.FPAttackMissLeft.AttackHitFrameTime < 5)
                 return false;
 
             if (!animBlock.FPAttackChargeUpReleaseRight.Anim.Name.Equals("Knife_ChargeupRelease"))
                 return false;
 
-            if (animBlock.FPAttackChargeUpReleaseRight.AttackHitFrameTime < 4)
+            if (animBlock.FPAttackChargeUpReleaseRight.AttackHitFrameTime < 5)
                 return false;
 
             if (animBlock.FPAttackChargeUpReleaseRight.DamageStartTime > 0)
@@ -57,7 +72,7 @@ namespace KnifeFix
             if (!animBlock.FPAttackChargeUpReleaseLeft.Anim.Name.Equals("Knife_ChargeupRelease2"))
                 return false;
 
-            if (animBlock.FPAttackChargeUpReleaseLeft.AttackHitFrameTime < 4)
+            if (animBlock.FPAttackChargeUpReleaseLeft.AttackHitFrameTime < 5)
                 return false;
 
             if (animBlock.FPAttackChargeUpReleaseLeft.DamageStartTime > 0)
@@ -66,7 +81,7 @@ namespace KnifeFix
             return true;
         }
 
-        private static void OverwriteKnifeAnim(MeleeArchetypeDataBlock archBlock, MeleeAnimationSetDataBlock animBlock)
+        private static void OverwriteKnifeArch(MeleeArchetypeDataBlock archBlock)
         {
             archBlock.AttackSphereRadius = Math.Max(archBlock.AttackSphereRadius + KNIFE_SPHERE_MOD, KNIFE_SPHERE_MIN);
 
@@ -74,7 +89,10 @@ namespace KnifeFix
             float fracSphere = Math.Max(0, (archBlock.AttackSphereRadius + KNIFE_SPHERE_MOD) / KNIFE_SPHERE_MIN);
             float newLength = archBlock.CameraDamageRayLength + (fracSphere < 1 ? fracSphere * KNIFE_LENGTH_MOD : KNIFE_LENGTH_MOD);
             archBlock.CameraDamageRayLength = newLength;
+        }
 
+        private static void OverwriteKnifeAnim(MeleeAnimationSetDataBlock animBlock)
+        {
             // To minimize the amount of hard coding, just overwriting the fields that matter.
             // Frame times don't seem to do anything from testing, but editing those too JFS.
             MeleeAnimationSetDataBlock.MeleeAttackData data = animBlock.FPAttackMissRight;
