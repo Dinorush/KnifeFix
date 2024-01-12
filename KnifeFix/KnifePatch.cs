@@ -9,7 +9,7 @@ namespace KnifeFix
     internal static class KnifePatch
     {
         private const float KNIFE_SPHERE_MIN = .15f;
-        private const float KNIFE_SPHERE_MOD = -.15f;
+        private const float KNIFE_SPHERE_MOD = -.1f;
         private const float KNIFE_LENGTH_MOD = .25f;
 
         private static List<uint> modifiedAnims = new();
@@ -83,12 +83,11 @@ namespace KnifeFix
 
         private static void OverwriteKnifeArch(MeleeArchetypeDataBlock archBlock)
         {
-            archBlock.AttackSphereRadius = Math.Max(archBlock.AttackSphereRadius + KNIFE_SPHERE_MOD, KNIFE_SPHERE_MIN);
-
             // If only a portion of sphere radius applies (e.g. modded knife sphere), only compensate with a portion of the length 
-            float fracSphere = Math.Max(0, (archBlock.AttackSphereRadius + KNIFE_SPHERE_MOD) / KNIFE_SPHERE_MIN);
-            float newLength = archBlock.CameraDamageRayLength + (fracSphere < 1 ? fracSphere * KNIFE_LENGTH_MOD : KNIFE_LENGTH_MOD);
+            float fracSphere = Math.Min(1, Math.Max(0, (archBlock.AttackSphereRadius + KNIFE_SPHERE_MOD) / KNIFE_SPHERE_MIN));
+            float newLength = archBlock.CameraDamageRayLength + fracSphere * KNIFE_LENGTH_MOD;
             archBlock.CameraDamageRayLength = newLength;
+            archBlock.AttackSphereRadius += fracSphere * KNIFE_SPHERE_MOD;
         }
 
         private static void OverwriteKnifeAnim(MeleeAnimationSetDataBlock animBlock)
