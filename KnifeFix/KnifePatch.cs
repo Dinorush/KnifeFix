@@ -85,8 +85,7 @@ namespace KnifeFix
         {
             // If only a portion of sphere radius applies (e.g. modded knife sphere), only compensate with a portion of the length 
             float fracSphere = Math.Min(1, Math.Max(0, (archBlock.AttackSphereRadius + KNIFE_SPHERE_MOD) / KNIFE_SPHERE_MIN));
-            float newLength = archBlock.CameraDamageRayLength + fracSphere * KNIFE_LENGTH_MOD;
-            archBlock.CameraDamageRayLength = newLength;
+            archBlock.CameraDamageRayLength += fracSphere * KNIFE_LENGTH_MOD;
             archBlock.AttackSphereRadius += fracSphere * KNIFE_SPHERE_MOD;
         }
 
