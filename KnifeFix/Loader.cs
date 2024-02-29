@@ -2,11 +2,10 @@
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
-using System.Diagnostics;
 
 namespace KnifeFix
 {
-    [BepInPlugin("Dinorush." + MODNAME, MODNAME, "1.1.0")]
+    [BepInPlugin("Dinorush." + MODNAME, MODNAME, "1.2.0")]
     internal sealed class Loader : BasePlugin
     {
         public const string MODNAME = "KnifeFix";
