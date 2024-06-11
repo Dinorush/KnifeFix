@@ -2,11 +2,13 @@
 using GameData;
 using System;
 using Gear;
+using System.Collections.Generic;
 
 namespace KnifeFix
 {
     internal static class KnifePatch
     {
+        private static readonly Dictionary<uint, float> ModifiedSpheres = new();
         private const float KNIFE_SPHERE_MIN = .15f;
         private const float KNIFE_SPHERE_MOD = -.1f;
         private const float KNIFE_LENGTH_MOD = .25f;
@@ -18,10 +20,9 @@ namespace KnifeFix
         {
             if (!IsKnife(__instance)) return;
 
-            Loader.Logger.LogMessage("Modifying " + __instance.PublicName + " archetype block.");
             // Archetype is referenced directly, so forced to edit DBs.
             OverwriteKnifeArchBlock(__instance.MeleeArchetypeData);
-            Loader.Logger.LogMessage("Modifying " + data.name + " animations.");
+            Loader.Logger.LogMessage("Modifying animations for " + __instance.PublicName);
             OverwriteKnifeAnim(__instance);
         }
 
@@ -65,10 +66,16 @@ namespace KnifeFix
 
         private static void OverwriteKnifeArchBlock(MeleeArchetypeDataBlock archBlock)
         {
+            // Don't want to modify the same archetype multiple times
+            uint id = archBlock.persistentID;
+            if (ModifiedSpheres.TryGetValue(id, out float radius) && radius == archBlock.AttackSphereRadius) return;
+            Loader.Logger.LogMessage("Modifying archetype block. Name: " + archBlock.name + ", ID: " + id);
+
             // If only a portion of sphere radius applies (e.g. modded knife sphere), only compensate with a portion of the length 
             float fracSphere = Math.Min(1, Math.Max(0, (archBlock.AttackSphereRadius + KNIFE_SPHERE_MOD) / KNIFE_SPHERE_MIN));
             archBlock.CameraDamageRayLength += fracSphere * KNIFE_LENGTH_MOD;
             archBlock.AttackSphereRadius += fracSphere * KNIFE_SPHERE_MOD;
+            ModifiedSpheres[id] = archBlock.AttackSphereRadius;
         }
 
         private static void OverwriteKnifeAnim(MeleeWeaponFirstPerson melee)
