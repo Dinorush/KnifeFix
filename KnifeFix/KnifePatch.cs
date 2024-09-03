@@ -14,6 +14,7 @@ namespace KnifeFix
         private const float KNIFE_LENGTH_MOD = .25f;
 
         [HarmonyPatch(typeof(MeleeWeaponFirstPerson), nameof(MeleeWeaponFirstPerson.SetupMeleeAnimations))]
+        [HarmonyAfter(MWCWrapper.GUID)]
         [HarmonyWrapSafe]
         [HarmonyPostfix]
         private static void EditKnifeDatablock(MeleeWeaponFirstPerson __instance, MeleeAnimationSetDataBlock data)

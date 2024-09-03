@@ -5,7 +5,8 @@ using HarmonyLib;
 
 namespace KnifeFix
 {
-    [BepInPlugin("Dinorush." + MODNAME, MODNAME, "1.2.1")]
+    [BepInPlugin("Dinorush." + MODNAME, MODNAME, "1.3.0")]
+    [BepInDependency(MWCWrapper.GUID, BepInDependency.DependencyFlags.SoftDependency)]
     internal sealed class Loader : BasePlugin
     {
         public const string MODNAME = "KnifeFix";
